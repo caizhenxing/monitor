@@ -123,7 +123,7 @@ public class MonitorSimpleServiceImpl implements MonitorSimpleService {
 		try {
 			JsonMapper jsonMapper = JsonMapper.nonDefaultMapper();
 //			redisPool.setLPushByPipelining(key, value);
-			redisPool.setZaddMe(ConstantInfo.OSFENG_CN_BLOG_MONITOR_METHOD_TAGE + monitorInfo.getMethodName(), monitorInfo.getProcessTime().getTime(), jsonMapper.toJson(monitorInfo));
+			redisPool.setZaddByPipelining(ConstantInfo.OSFENG_CN_BLOG_MONITOR_METHOD_TAGE + monitorInfo.getMethodName(), monitorInfo.getProcessTime().getTime(), jsonMapper.toJson(monitorInfo));
 		} catch (Exception e) {
 			logger.error("addMethodProcessInfo 异常：{}",e);
 			return false;
