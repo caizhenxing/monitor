@@ -1,9 +1,14 @@
+#monitor 2015-11-22
+
+
+
 描述：
 一个基于Spring AOP + redis + echarts 实现的方法性能监控插件。
 
 使用方式：
 1、通过注解形式
 2、通过页面管理
+
 
 
 一、redis使用pipeline lpush  与 pipeline zadd的考量
