@@ -1,10 +1,9 @@
 package com.xzm.monitor.entity;
 
+import java.io.Serializable;
 import java.util.Date;
 
-import cn.osfeng.money.entity.base.BaseBean;
-
-public class MonitorInfo extends BaseBean {
+public class MonitorInfo implements Serializable {
 	/**
 	 * 
 	 */

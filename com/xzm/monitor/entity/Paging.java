@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.springframework.util.StringUtils;
 
-import cn.osfeng.money.entity.solr.MetaCondition;
 
 /**
  * 分页
@@ -45,11 +44,6 @@ public class Paging<T> implements Serializable {
 	private Integer counts;
 
 	private List<T> objects;
-
-	/**
-	 * solr facet
-	 */
-	private List<MetaCondition> conditions;
 
 	public Paging() {
 
@@ -165,14 +159,6 @@ public class Paging<T> implements Serializable {
 		}
 
 		this.searchPage = searchPage;
-	}
-
-	public List<MetaCondition> getConditions() {
-		return conditions;
-	}
-
-	public void setConditions(List<MetaCondition> conditions) {
-		this.conditions = conditions;
 	}
 
 }

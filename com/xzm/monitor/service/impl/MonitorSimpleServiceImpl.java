@@ -18,9 +18,9 @@ import com.xzm.monitor.entity.ConstantInfo;
 import com.xzm.monitor.entity.MonitorInfo;
 import com.xzm.monitor.entity.Paging;
 import com.xzm.monitor.service.MonitorSimpleService;
+import com.xzm.monitor.util.BaseUtil;
 import com.xzm.monitor.util.JsonMapper;
 
-import cn.osfeng.money.cache.redis.RedisPool;
 
 @Service
 public class MonitorSimpleServiceImpl implements MonitorSimpleService {
@@ -37,11 +37,10 @@ public class MonitorSimpleServiceImpl implements MonitorSimpleService {
 	public boolean checkMonitorMethod(MonitorInfo monitorInfo,MethodInvocation invocation) {
 		Set<String> sets = null;
 		boolean isMonitor = false;
-		
 		JsonMapper jsonMapper = JsonMapper.nonDefaultMapper();
 		MonitorInfo info = null;
 		try {
-			sets = redisPool.getSmembersMe(ConstantInfo.OSFENG_CN_BLOG_MONITOR_METHOD_LIST_TAGE+"test_");
+			sets = redisPool.getSmembersMe(GeneratorKeyUtil.getKey(ConstantInfo.OSFENG_CN_BLOG_MONITOR_METHOD_LIST_TAGE, "test_"));
 			if(!StringUtils.isEmpty(sets)){
 				for (String str : sets) {
 					info = jsonMapper.fromJson(str, MonitorInfo.class);
@@ -59,7 +58,7 @@ public class MonitorSimpleServiceImpl implements MonitorSimpleService {
 				isMonitor = invocation.getMethod().isAnnotationPresent(MethodMonitor.class);
 	        	logger.debug("methodName:{}  ,是否注解:{}",invocation.getMethod().getName(),isMonitor);
 	        	if(isMonitor){
-	        		addMonitorMethod(new MonitorInfo(invocation.getMethod().getDeclaringClass().getSimpleName(), invocation.getMethod().getName(),ANNOTATION_TAG));
+	        		addMonitorMethod(new MonitorInfo(invocation.getMethod().getDeclaringClass().getSimpleName(), invocation.getMethod().getDeclaringClass().getSimpleName() + "." + invocation.getMethod().getName(),ANNOTATION_TAG));
 	        	}
 			}
 		} catch (Exception e) {
@@ -78,8 +77,8 @@ public class MonitorSimpleServiceImpl implements MonitorSimpleService {
 		List<MonitorInfo> methodsBeans = new ArrayList<MonitorInfo>();
 		Integer counts = 0;
 		try {
-			counts = Integer.valueOf(redisPool.getScardMe(ConstantInfo.OSFENG_CN_BLOG_MONITOR_METHOD_LIST_TAGE+"test_") + "");
-			methods = redisPool.getListByNum(ConstantInfo.OSFENG_CN_BLOG_MONITOR_METHOD_LIST_TAGE+"test_", paging.getStartPage(), paging.getStartPage()+paging.getPageSize(),null,null);
+			counts = Integer.valueOf(redisPool.getScardMe(GeneratorKeyUtil.getKey(ConstantInfo.OSFENG_CN_BLOG_MONITOR_METHOD_LIST_TAGE, "test_")) + "");
+			methods = redisPool.getListByNum(GeneratorKeyUtil.getKey(ConstantInfo.OSFENG_CN_BLOG_MONITOR_METHOD_LIST_TAGE, "test_"), paging.getStartPage(), paging.getStartPage()+paging.getPageSize(),null,null);
 			if(!StringUtils.isEmpty(methods)){
 				for (String method : methods) {
 					methodsBeans.add(jsonMapper.fromJson(method, MonitorInfo.class));
@@ -98,7 +97,7 @@ public class MonitorSimpleServiceImpl implements MonitorSimpleService {
 		try {
 			JsonMapper jsonMapper = JsonMapper.nonDefaultMapper();
 			monitorInfo.setProcessTime(new Date());
-			redisPool.setSaddMe(ConstantInfo.OSFENG_CN_BLOG_MONITOR_METHOD_LIST_TAGE+"test_", jsonMapper.toJson(monitorInfo));
+			redisPool.setSaddMe(GeneratorKeyUtil.getKey(ConstantInfo.OSFENG_CN_BLOG_MONITOR_METHOD_LIST_TAGE, "test_"), jsonMapper.toJson(monitorInfo));
 		} catch (Exception e) {
 			logger.error("addMonitorMethod 异常：{}",e);
 			return false;
@@ -108,9 +107,22 @@ public class MonitorSimpleServiceImpl implements MonitorSimpleService {
 
 	@Override
 	public boolean removeMonitorMethod(MonitorInfo monitorInfo) {
+		Set<String> sets = null;
+		JsonMapper jsonMapper = JsonMapper.nonDefaultMapper();
+		MonitorInfo info = null;
 		try {
-			redisPool.delSremMe(ConstantInfo.OSFENG_CN_BLOG_MONITOR_METHOD_LIST_TAGE+"test_", monitorInfo.getMethodName());
-			
+			sets = redisPool.getSmembersMe(GeneratorKeyUtil.getKey(ConstantInfo.OSFENG_CN_BLOG_MONITOR_METHOD_LIST_TAGE, "test_"));
+			if(!StringUtils.isEmpty(sets)){
+				for (String str : sets) {
+					info = jsonMapper.fromJson(str, MonitorInfo.class);
+					if(!StringUtils.isEmpty(info.getMethodName())){
+						if(info.getMethodName().equals(monitorInfo.getMethodName())){
+							redisPool.delSremMe(GeneratorKeyUtil.getKey(ConstantInfo.OSFENG_CN_BLOG_MONITOR_METHOD_LIST_TAGE, "test_"), jsonMapper.toJson(info));
+							break;
+						}
+					}
+				}
+			}
 		} catch (Exception e) {
 			logger.error("removeMonitorMethod 异常：{}",e);
 			return false;
@@ -123,7 +135,7 @@ public class MonitorSimpleServiceImpl implements MonitorSimpleService {
 		try {
 			JsonMapper jsonMapper = JsonMapper.nonDefaultMapper();
 //			redisPool.setLPushByPipelining(key, value);
-			redisPool.setZaddByPipelining(ConstantInfo.OSFENG_CN_BLOG_MONITOR_METHOD_TAGE + monitorInfo.getMethodName(), monitorInfo.getProcessTime().getTime(), jsonMapper.toJson(monitorInfo));
+			redisPool.setZaddByPipelining(GeneratorKeyUtil.getKey(ConstantInfo.OSFENG_CN_BLOG_MONITOR_METHOD_TAGE ,BaseUtil.getLocalIp(),BaseUtil.getParseDay(monitorInfo.getProcessTime()), monitorInfo.getMethodName()), monitorInfo.getProcessTime().getTime(), jsonMapper.toJson(monitorInfo));
 		} catch (Exception e) {
 			logger.error("addMethodProcessInfo 异常：{}",e);
 			return false;
@@ -142,8 +154,8 @@ public class MonitorSimpleServiceImpl implements MonitorSimpleService {
 			paging = new Paging<MonitorInfo>();
 		}else{
 			try {
-				counts = Integer.valueOf(redisPool.getZcardMe(ConstantInfo.OSFENG_CN_BLOG_MONITOR_METHOD_TAGE + monitorInfo.getMethodName()) + "");
-				methods = redisPool.getZrangeMe(ConstantInfo.OSFENG_CN_BLOG_MONITOR_METHOD_TAGE + monitorInfo.getMethodName(), counts-35,counts);
+				counts = Integer.valueOf(redisPool.getZcardMe(GeneratorKeyUtil.getKey(ConstantInfo.OSFENG_CN_BLOG_MONITOR_METHOD_TAGE ,BaseUtil.getLocalIp(),BaseUtil.getParseDay(monitorInfo.getProcessTime()), monitorInfo.getMethodName())) + "");
+				methods = redisPool.getZrangeMe(GeneratorKeyUtil.getKey(ConstantInfo.OSFENG_CN_BLOG_MONITOR_METHOD_TAGE ,BaseUtil.getLocalIp(),BaseUtil.getParseDay(monitorInfo.getProcessTime()), monitorInfo.getMethodName()), counts-35,counts);
 				if(!StringUtils.isEmpty(methods)){
 					for (String method : methods) {
 						monitorInfos.add(jsonMapper.fromJson(method, MonitorInfo.class));
@@ -158,6 +170,5 @@ public class MonitorSimpleServiceImpl implements MonitorSimpleService {
 		
 		return paging;
 	}
-
 
 }
