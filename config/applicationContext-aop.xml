@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd"
+	default-lazy-init="true">
+  
+    <bean id="methodTimeAdvice" class="com.xzm.monitor.interceptor.MyMethodInterceptor"></bean>  
+      
+    <!-- 根据 Bean 的名字自动实现代理拦截 -->  
+    
+    <bean  class="org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator">  
+        <property name="interceptorNames"> 
+            <list>  
+                <value>methodTimeAdvice</value>  
+            </list>  
+        </property>  
+        <property name="beanNames">  
+            <list>  
+                <value>*Impl</value>  
+            </list>  
+        </property>  
+    </bean>  
+</beans>  
