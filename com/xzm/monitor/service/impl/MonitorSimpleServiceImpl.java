@@ -53,6 +53,7 @@ public class MonitorSimpleServiceImpl implements MonitorSimpleService {
 					}
 					
 				}
+				logger.debug("================  methodName:{} contains:{}",monitorInfo.getMethodName(),sets.contains(monitorInfo.getMethodName()));
 			}
 			if(!isMonitor){
 				isMonitor = invocation.getMethod().isAnnotationPresent(MethodMonitor.class);
@@ -64,7 +65,6 @@ public class MonitorSimpleServiceImpl implements MonitorSimpleService {
 		} catch (Exception e) {
 			logger.error("checkMonitorMethod 异常：{}",e);
 		}
-		logger.debug("================  methodName:{} contains:{}",monitorInfo.getMethodName(),sets.contains(monitorInfo.getMethodName()));
 		return isMonitor;
 	}
 
